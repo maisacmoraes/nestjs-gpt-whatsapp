@@ -1,44 +1,59 @@
 import { HttpService } from '@nestjs/axios';
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { catchError, lastValueFrom, map } from 'rxjs';
-import { AxiosResponse } from 'axios';
+import { AxiosError, AxiosResponse } from 'axios';
+import { OpenaiService } from 'src/openai/openai.service';
 
 @Injectable()
 export class WhatsappService {
-  constructor(private readonly httpService: HttpService) {}
+  constructor(private readonly openaiService: OpenaiService) {}
+  private readonly httpService = new HttpService();
   private readonly logger = new Logger(WhatsappService.name);
 
-  async sendWhatsappMessage(to: string): Promise<any> {
-    console.log(to);
-
-    const url = `https://graph.facebook.com/v22.0/558150200725850/messages`; // confere se a versão é mesmo v22.0 ou v17.0 (a última pública hoje)
-
+  async sendWhatsappMessage(
+    to: string,
+    userMessage: string,
+    message_id: string,
+  ) {
+    const aiResponse = await this.openaiService.generateAIResponse(
+      to,
+      userMessage,
+    );
+    const url = `https://graph.facebook.com/${process.env.WHATSAPP_CLOUD_API_VERSION}/${process.env.WHATSAPP_CLOUD_PHONE_NUMBER_ID}/messages`;
     const headers = {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${process.env.WHATSAPP_CLOUD_API_KEY}`,
     };
-    console.log(process.env.WHATSAPP_CLOUD_API_KEY);
-
     const data = {
       messaging_product: 'whatsapp',
       recipient_type: 'individual',
       to,
+      context: {
+        message_id,
+      },
       type: 'text',
       text: {
         preview_url: false,
-        body: 'Hello from WhatsApp Cloud API!',
+        body: aiResponse,
       },
     };
 
     try {
       const response = await lastValueFrom(
-        this.httpService.post(url, data, { headers }).pipe(
-          map((res: AxiosResponse) => res.data),
-          catchError((error) => {
-            this.logger.error(
-              'Erro ao enviar para WhatsApp API',
-              error?.response?.data || error,
-            );
+        this.httpService.post<unknown>(url, data, { headers }).pipe(
+          map((res: AxiosResponse<unknown>) => res.data),
+          catchError((error: AxiosError<unknown>) => {
+            const errorData = error.response?.data ?? error.message;
+
+            if (typeof errorData === 'object') {
+              this.logger.error(
+                'Erro ao enviar para WhatsApp API',
+                JSON.stringify(errorData),
+              );
+            } else {
+              this.logger.error('Erro ao enviar para WhatsApp API', errorData);
+            }
+
             throw new BadRequestException(
               'Erro ao enviar mensagem para WhatsApp API',
             );
@@ -48,51 +63,56 @@ export class WhatsappService {
 
       this.logger.log('Mensagem enviada com sucesso:', response);
       return response;
-    } catch (error) {
+    } catch (error: unknown) {
       this.logger.error('Erro inesperado ao enviar mensagem:', error);
       return 'error';
     }
   }
 
-  // async sendWhatsappMessage(from) {
-  //   console.log(from);
+  async markAsRead(messageId: string): Promise<void> {
+    const url = `https://graph.facebook.com/${process.env.WHATSAPP_CLOUD_API_VERSION}/${process.env.WHATSAPP_CLOUD_PHONE_NUMBER_ID}/messages`;
+    const headers = {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${process.env.WHATSAPP_CLOUD_API_KEY}`,
+    };
+    const data = {
+      messaging_product: 'whatsapp',
+      status: 'read',
+      message_id: messageId,
+    };
 
-  //   const url = 'https://graph.facebook.com/v22.0/558150200725850/messages';
-  //   const config = {
-  //     headers: {
-  //       'Content-Type': 'application/json',
-  //       Authorization: `Bearer ${process.env.WHATSAPP_CLOUD_API_KEY}`,
-  //     },
-  //   };
-  //   const data = JSON.stringify({
-  //     messaging_product: 'whatsapp',
-  //     recipient_type: 'individual',
-  //     to: from,
-  //     type: 'text',
-  //     text: {
-  //       preview_url: false,
-  //       body: 'Hello from WhatsApp Cloud API!',
-  //     },
-  //   });
-  //   try {
-  //     const response = this.httpService
-  //       .post(url, data, config)
-  //       .pipe(map((response: AxiosResponse) => response.data))
-  //       .pipe(
-  //         catchError((error) => {
-  //           this.logger.error(error);
-  //           throw new BadRequestException(
-  //             'Error posting message to WhatsApp API',
-  //           );
-  //         }),
-  //       );
+    try {
+      await lastValueFrom(
+        this.httpService.post<unknown>(url, data, { headers }).pipe(
+          map(() => {
+            this.logger.log(`Mensagem ${messageId} marcada como lida.`);
+          }),
+          catchError((error: AxiosError<unknown>) => {
+            let errorData: string;
 
-  //     const messageSendingStatus = await lastValueFrom(response);
-  //     this.logger.log('Message sent successfully:', messageSendingStatus);
-  //   } catch (error) {
-  //     this.logger.error(error);
-  //     console.error('Unexpected error:', error);
-  //     return 'error';
-  //   }
-  // }
+            if (
+              error.response?.data &&
+              typeof error.response.data === 'object'
+            ) {
+              errorData = JSON.stringify(error.response.data);
+            } else if (typeof error.response?.data === 'string') {
+              errorData = error.response.data;
+            } else {
+              errorData = error.message;
+            }
+
+            this.logger.error('Erro ao marcar mensagem como lida:', errorData);
+            throw new BadRequestException('Erro ao marcar mensagem como lida');
+          }),
+        ),
+      );
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : JSON.stringify(error);
+      this.logger.error(
+        'Erro inesperado ao marcar mensagem como lida:',
+        errorMessage,
+      );
+    }
+  }
 }
