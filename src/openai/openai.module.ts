@@ -1,8 +1,10 @@
 import { Module } from '@nestjs/common';
 import { OpenaiService } from './openai.service';
-import { UserContextService } from 'src/user-context/user-context.service';
+import { UserContextModule } from 'src/user-context/user-context.module';
 
 @Module({
-  providers: [OpenaiService, UserContextService],
+  imports: [UserContextModule],
+  providers: [OpenaiService],
+  exports: [OpenaiService],
 })
 export class OpenaiModule {}
