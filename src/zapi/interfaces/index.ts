@@ -8,7 +8,7 @@ export type ISendOPTRequest = {
 
 export type ISendSimpleTextRequest = {
   phone: string;
-  message: string;
+  message: any;
   delayMessage?: number;
   delayTyping?: number;
   editMessageId?: string;

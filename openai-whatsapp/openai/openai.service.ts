@@ -1,7 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import OpenAI from 'openai';
-import { ChatCompletionMessageParam } from 'openai/resources/chat';
-import { UserContextService } from 'src/user-context/user-context.service';
+import { UserContextService } from 'openai-whatsapp/user-context/user-context.service';
 
 @Injectable()
 export class OpenaiService {
@@ -16,9 +15,7 @@ export class OpenaiService {
       const systemPrompt = process.env.LUMA_SYSTEM_PROMPT;
 
       await this.context.saveToContext(prompt, 'user', userID);
-      const userContext = (await this.context.getConsersationHistory(
-        userID,
-      )) as ChatCompletionMessageParam[];
+      const userContext = await this.context.getConsersationHistory(userID);
       this.logger.log(userContext);
 
       const response = await this.openai.chat.completions.create({
@@ -26,7 +23,7 @@ export class OpenaiService {
           { role: 'system', content: systemPrompt || '' },
           ...(userContext || []),
         ],
-        model: process.env.OPENAI_MODEL || 'gpt-4o-2024-11-20',
+        model: 'gpt-3.5-turbo',
       });
 
       const aiResponse = response.choices[0].message?.content || '';

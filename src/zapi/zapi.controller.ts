@@ -1,16 +1,18 @@
-import { Body, Controller, HttpException, Post } from '@nestjs/common';
+import { Body, Controller, HttpException, Post, Put } from '@nestjs/common';
 import { ZapiService } from './zapi.service';
 import { IZapiWebhookPayload } from './interfaces';
 
-@Controller('whatsapp')
+@Controller('webhook')
 export class ZapiController {
   constructor(private readonly zapiService: ZapiService) {}
 
-  @Post('webhook')
+  @Post('zapi')
   async handleIncomingWhatsappMessage(
     @Body() body: IZapiWebhookPayload,
   ): Promise<void> {
     try {
+      console.log(body);
+
       const { messageId, phone, type } = body;
       const message = body.text.message;
 
@@ -18,6 +20,21 @@ export class ZapiController {
         await this.zapiService.sendWhatsappMessage(phone, message, messageId);
       }
     } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException('Error processing incoming message', 500);
+    }
+  }
+
+  @Post('postman')
+  async handlePostmanRequest(@Body() body: { phone: string; message: string }) {
+    try {
+      const { phone, message } = body;
+      return await this.zapiService.sendWhatsappMessage(phone, message);
+    } catch (error) {
+      console.log(error);
+
       if (error instanceof HttpException) {
         throw error;
       }

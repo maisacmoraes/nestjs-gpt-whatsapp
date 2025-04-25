@@ -7,15 +7,19 @@ import {
   ISendLinkRequest,
   ISendSimpleTextRequest,
 } from './interfaces';
-import { httpResponses } from 'src/httpResponses';
+import { httpResponses } from 'openai-whatsapp/httpResponses';
+import { OpenaiService } from 'openai-whatsapp/openai/openai.service';
 
 @Injectable()
 export class ZapiService {
-  constructor() {}
+  constructor(private readonly openaiService: OpenaiService) {}
 
   private readonly URL_BASE = `https://api.z-api.io/instances/${process.env.INSTANCE_ZAPI}/token/${process.env.TOKEN_ZAPI}/`;
   private readonly httpService = new HttpService();
   private readonly logger = new Logger(ZapiService.name);
+  private readonly delayMessage = 15;
+  private readonly delayTyping = 15;
+  private readonly delayRequest = 5000;
 
   formatPhoneNumber(phoneNumber: string): string {
     return phoneNumber.replace(/\D/g, '');
@@ -129,6 +133,21 @@ export class ZapiService {
   async sendWhatsappMessage(
     phone: string,
     message: string,
-    messageId: string,
-  ) {}
+    messageId?: string,
+  ) {
+    const aiResponse = await this.openaiService.generateAIResponse([
+      { role: 'user', content: message },
+    ]);
+
+    return aiResponse;
+
+    // await this.sendSimpleText({
+    //   phone: this.formatPhoneNumber(phone),
+    //   message: aiResponse,
+    //   delayMessage: this.delayMessage,
+    //   delayTyping: this.delayTyping,
+    // });
+
+    this.logger.log('Mensagem enviada com sucesso:', aiResponse);
+  }
 }

@@ -2,7 +2,7 @@ import { HttpService } from '@nestjs/axios';
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { catchError, lastValueFrom, map } from 'rxjs';
 import { AxiosError, AxiosResponse } from 'axios';
-import { OpenaiService } from 'src/openai/openai.service';
+import { OpenaiService } from 'openai-whatsapp/openai/openai.service';
 
 @Injectable()
 export class WhatsappService {
@@ -27,7 +27,7 @@ export class WhatsappService {
     const data = {
       messaging_product: 'whatsapp',
       recipient_type: 'individual',
-      to,
+      // to,/*  */
       context: {
         message_id,
       },

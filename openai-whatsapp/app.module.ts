@@ -1,17 +1,17 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { WhatsappModule } from './whatsapp/whatsapp.module';
 import { ConfigModule } from '@nestjs/config';
+import { OpenaiModule } from './openai/openai.module';
 import { UserContextModule } from './user-context/user-context.module';
-import { ZapiModule } from './zapi/zapi.module';
-import { OpenRouterModule } from './open-router/open-router.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot(),
-    OpenRouterModule,
+    WhatsappModule,
+    OpenaiModule,
     UserContextModule,
-    ZapiModule,
   ],
   controllers: [AppController],
   providers: [AppService],
