@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { OpenaiService } from './openai.service';
-import { UserContextModule } from 'openai-whatsapp/user-context/user-context.module';
+import { UserContextModule } from 'openai-whatsapp/user-context-v1/user-context.module';
 
 @Module({
   imports: [UserContextModule],

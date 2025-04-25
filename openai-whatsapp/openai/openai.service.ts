@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import OpenAI from 'openai';
-import { UserContextService } from 'openai-whatsapp/user-context/user-context.service';
+import { UserContextService } from 'openai-whatsapp/user-context-v1/user-context.service';
 
 @Injectable()
 export class OpenaiService {

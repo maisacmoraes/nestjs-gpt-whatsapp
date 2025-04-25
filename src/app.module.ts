@@ -2,9 +2,9 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
-import { UserContextModule } from './user-context/user-context.module';
 import { ZapiModule } from './zapi/zapi.module';
 import { OpenRouterModule } from './open-router/open-router.module';
+import { UserContextModule } from './user-context/user-context.module';
 
 @Module({
   imports: [

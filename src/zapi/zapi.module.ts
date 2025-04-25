@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 import { ZapiService } from './zapi.service';
 import { ZapiController } from './zapi.controller';
-import { OpenaiModule } from 'openai-whatsapp/openai/openai.module';
+import { OpenRouterModule } from 'src/open-router/open-router.module';
 
 @Module({
-  imports: [OpenaiModule],
+  imports: [OpenRouterModule],
   controllers: [ZapiController],
   providers: [ZapiService],
   exports: [ZapiService],

@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { UserContextModule } from 'openai-whatsapp/user-context/user-context.module';
 import { OpenRouterService } from './open-router.service';
+import { UserContextModule } from 'src/user-context/user-context.module';
 
 @Module({
   imports: [UserContextModule],

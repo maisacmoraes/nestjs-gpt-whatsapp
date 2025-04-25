@@ -1,4 +1,4 @@
-import { Body, Controller, HttpException, Post, Put } from '@nestjs/common';
+import { Body, Controller, HttpException, Post } from '@nestjs/common';
 import { ZapiService } from './zapi.service';
 import { IZapiWebhookPayload } from './interfaces';
 
@@ -13,11 +13,11 @@ export class ZapiController {
     try {
       console.log(body);
 
-      const { messageId, phone, type } = body;
+      const { phone, type } = body;
       const message = body.text.message;
 
       if (type === 'ReceivedCallback' && body.text) {
-        await this.zapiService.sendWhatsappMessage(phone, message, messageId);
+        await this.zapiService.sendWhatsappMessage(phone, message);
       }
     } catch (error) {
       if (error instanceof HttpException) {
