@@ -79,12 +79,25 @@ export class UserContextService {
     }
   }
 
-  async getConsersationHistory(userID: string) {
+  async getConversationHistory(userID: string) {
     try {
-      const history = await this.redis.lrange(userID, 0, -1);
-      return history.map(
-        (item) => JSON.parse(item) as ChatCompletionMessageParam,
-      );
+      const hashedUserID = this.hashPhoneNumber(userID);
+
+      const history = await this.redis.lrange(hashedUserID, 0, -1);
+
+      return history.map((item) => {
+        const parsed = JSON.parse(item) as {
+          type: 'user' | 'assistant';
+          data: {
+            content: string;
+          };
+        };
+
+        return {
+          role: parsed.type,
+          content: parsed.data.content,
+        };
+      });
     } catch (error) {
       this.logger.error('Error getting conversation history:', error);
       throw new Error('Error getting conversation history');

@@ -11,8 +11,6 @@ export class ZapiController {
     @Body() body: IZapiWebhookPayload,
   ): Promise<void> {
     try {
-      console.log(body);
-
       const { phone, type } = body;
       const message = body.text.message;
 
@@ -33,8 +31,6 @@ export class ZapiController {
       const { phone, message } = body;
       return await this.zapiService.sendWhatsappMessage(phone, message);
     } catch (error) {
-      console.log(error);
-
       if (error instanceof HttpException) {
         throw error;
       }

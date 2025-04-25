@@ -18,9 +18,10 @@ export class OpenRouterService {
   async generateAIResponse(userID: string, userMessage: string) {
     try {
       const systemPrompt = process.env.LUMA_SYSTEM_PROMPT;
-
       await this.context.saveToContext(userMessage, 'user', userID);
-      const userContext = await this.context.getConsersationHistory(userID);
+
+      const userContext = await this.context.getConversationHistory(userID);
+
       this.logger.log(userContext);
 
       const response = await axios.post(
@@ -28,14 +29,9 @@ export class OpenRouterService {
         {
           model: 'openai/gpt-3.5-turbo',
           messages: [
-            {
-              role: 'system',
-              content: systemPrompt,
-            },
-            {
-              role: 'user',
-              content: userMessage,
-            },
+            { role: 'system', content: systemPrompt || '' },
+            ...(userContext || []),
+            { role: 'user', content: userMessage },
           ],
         },
         {
@@ -51,12 +47,10 @@ export class OpenRouterService {
       const aiResponse = (response.data as OpenAIResponse).choices[0].message
         .content;
 
-      console.log(aiResponse);
-
       await this.context.saveAndFetchContext(aiResponse, 'assistant', userID);
-    } catch (error) {
-      console.log(error);
 
+      return aiResponse;
+    } catch (error) {
       this.logger.error('Erro ao gerar resposta da IA via OpenRouter:', error);
       throw error;
     }
