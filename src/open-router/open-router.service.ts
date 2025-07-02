@@ -27,7 +27,7 @@ export class OpenRouterService {
       const response = await axios.post(
         'https://openrouter.ai/api/v1/chat/completions',
         {
-          model: 'openai/gpt-3.5-turbo',
+          model: 'meta-llama/llama-4-scout:free',
           messages: [
             { role: 'system', content: systemPrompt || '' },
             ...(userContext || []),
